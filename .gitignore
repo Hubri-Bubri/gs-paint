@@ -1,0 +1,10 @@
+build
+dist
+*.pyc
+*.egg*
+*.sublime*
+**/node_modules/*
+**/.DS_Store
+**/.pytest_cache
+**/.vscode
+**/.coverage
