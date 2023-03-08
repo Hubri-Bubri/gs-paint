@@ -23,22 +23,41 @@
 
           <b-button-group size="sm" class="mr-1">
             <b-button @click="onClickAddArrow" variant="primary">
-              <b-icon icon="arrow-right-short"></b-icon> Arrow
+              <b-icon icon="forward"></b-icon> Arrow
             </b-button>
 
             <b-button @click="onClickAddCircle" variant="primary">
-              <b-icon icon="circle-fill"></b-icon> Circle
+              <b-icon icon="circle"></b-icon> Circle
             </b-button>
 
             <b-button @click="onClickAddSquare" variant="primary">
-              <b-icon icon="square-fill"></b-icon> Square
+              <b-icon icon="square"></b-icon> Square
             </b-button>
           </b-button-group>
+
+          <b-button-group size="sm" class="mr-1">
+            <b-button @click="onClickSave" variant="primary">
+              <b-icon icon="dash-lg"></b-icon> Border
+            </b-button>
+          </b-button-group>
+
+          <b-button-group size="sm" class="mr-1">
+            <b-button @click="onClickLoad" variant="success">
+              <b-icon icon="brush-fill"></b-icon>
+            </b-button>
+            <b-button @click="onClickLoad" variant="warning">
+              <b-icon icon="brush-fill"></b-icon>
+            </b-button>
+            <b-button @click="onClickLoad" variant="danger">
+              <b-icon icon="brush-fill"></b-icon>
+            </b-button>
+          </b-button-group>
+
         </b-button-toolbar>
       </template>
 
-      <b-card-body class="overflow-auto">
-        <canvas id="area" ref="canvas" width="500" height="500"></canvas>
+      <b-card-body class="overflow-auto d-flex justify-content-center">
+        <canvas id="canvas" ref="canvas"></canvas>
       </b-card-body>
     </b-card>
   </div>
@@ -49,9 +68,23 @@
 import { fabric } from 'fabric'
 
 export default {
+  props: {
+    url: {
+      type: String,
+      default: null,
+    },
+
+    json: {
+      type: [String, Object],
+      default: null,
+    },
+  },
+
   methods: {
     onClickSave() {
       this.state = this.canvas.toJSON()
+
+      console.log(this.state)
     },
 
     onClickLoad() {
@@ -60,11 +93,15 @@ export default {
       }
     },
 
-    onClickAddArrow() {
+    onClickAddCircle() {},
+
+    onClickAddArrow() {},
+
+    onClickResize() {
+      this.setCanvasAutoSize()
     },
 
-    onClickAddCircle() {
-    },
+    setCanvasAutoSize() {},
 
     onClickAddSquare() {
       var rect = new fabric.Rect({
@@ -78,19 +115,31 @@ export default {
       this.canvas.add(rect)
     },
 
-    onClickSetBackground() {
-      this.setBackground()
-    },
+    onClickSetBackground() {},
 
-    setBackground() {
-      fabric.Image.fromURL('/image/image-1.jpg', image => {
-        this.canvas.insertAt(image, 0);
+    setImageFromUrl(url) {
+      fabric.Image.fromURL(url, image => {
+        this.canvas.setHeight(image.height)
+        this.canvas.setWidth(image.width)
+
+        this.canvas.setBackgroundImage(image, () => {
+          this.canvas.renderAll()
+        });
       })
     }
   },
 
+  watch: {
+    url: {
+      handler () {
+        this.setImageFromUrl(this.url)
+      },
+      immediate: true
+    }
+  },
+
   mounted() {
-    this.canvas = new fabric.Canvas('area')
+    this.canvas = new fabric.Canvas('canvas')
   },
 
   destroyed() { }
