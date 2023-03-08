@@ -1,3 +1,3 @@
-export default function GsEditorPlugin(Vue) {
+export default function gsEditorPlugin(Vue) {
 
 }
