@@ -6,49 +6,51 @@
         <b-button-toolbar>
           <b-button-group size="sm" class="mr-1">
 
-            <b-button @click="onClickSave" variant="primary">
+            <b-button @click="onClickSave" variant="secondary">
               <b-icon icon="sd-card"></b-icon> Save
             </b-button>
 
-            <b-button @click="onClickLoad" variant="primary">
+            <b-button @click="onClickLoad" variant="secondary">
               <b-icon icon="folder2-open"></b-icon> Open
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickSetBackground" variant="primary">
-              <b-icon icon="file-earmark-image"></b-icon> Image
-            </b-button>
-          </b-button-group>
-
-          <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickAddArrow" variant="primary">
+            <b-button @click="onClickAddArrow" variant="secondary">
               <b-icon icon="forward"></b-icon> Arrow
             </b-button>
 
-            <b-button @click="onClickAddCircle" variant="primary">
+            <b-button @click="onClickAddCircle" variant="secondary">
               <b-icon icon="circle"></b-icon> Circle
             </b-button>
 
-            <b-button @click="onClickAddSquare" variant="primary">
+            <b-button @click="onClickAddSquare" variant="secondary">
               <b-icon icon="square"></b-icon> Square
+            </b-button>
+
+            <b-button @click="onClickAddSquare" variant="secondary">
+              <b-icon icon="cursor-text"></b-icon> Text
+            </b-button>
+
+            <b-button @click="onClickDelete" variant="secondary">
+              <b-icon icon="trash2"></b-icon> Delete
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickSave" variant="primary">
+            <b-button @click="onClickBorder" variant="secondary">
               <b-icon icon="dash-lg"></b-icon> Border
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickLoad" variant="success">
+            <b-button @click="onClickFill('rgb(40, 167, 69)')" variant="success">
               <b-icon icon="brush-fill"></b-icon>
             </b-button>
-            <b-button @click="onClickLoad" variant="warning">
+            <b-button @click="onClickFill('rgb(255, 193, 7)')" variant="warning">
               <b-icon icon="brush-fill"></b-icon>
             </b-button>
-            <b-button @click="onClickLoad" variant="danger">
+            <b-button @click="onClickFill('rgb(220, 53, 69)')" variant="danger">
               <b-icon icon="brush-fill"></b-icon>
             </b-button>
           </b-button-group>
@@ -80,11 +82,23 @@ export default {
     },
   },
 
+  data() {
+    return {}
+  },
+
   methods: {
+    onClickDelete() {
+      const object = this.canvas.getActiveObject()
+
+      if (object == null) {
+        return
+      }
+
+      this.canvas.remove(object)
+    },
+
     onClickSave() {
       this.state = this.canvas.toJSON()
-
-      console.log(this.state)
     },
 
     onClickLoad() {
@@ -93,29 +107,74 @@ export default {
       }
     },
 
-    onClickAddCircle() {},
+    onClickBorder() {
+      const object = this.canvas.getActiveObject()
+
+      if (object == null) {
+        return
+      }
+
+      let strokeWidth = object.strokeWidth
+
+      if (strokeWidth > 0) {
+        strokeWidth = 0
+      } else {
+        strokeWidth = 5
+      }
+
+      object.set({
+        strokeWidth,
+      })
+
+      this.canvas.renderAll()
+    },
+
+    onClickFill(fill) {
+      const object = this.canvas.getActiveObject()
+
+      if (object == null) {
+        return
+      }
+
+      object.set({
+        fill,
+      })
+
+      this.canvas.renderAll()
+    },
+
+    onClickAddCircle() {
+      var circle = new fabric.Circle({
+        radius: 100,
+        fill: 'green',
+        left: 100,
+        top: 100,
+        stroke: 'red',
+        strokeWidth: 5,
+        strokeUniform: true,
+      });
+
+      this.canvas.add(circle)
+    },
 
     onClickAddArrow() {},
 
-    onClickResize() {
-      this.setCanvasAutoSize()
-    },
-
-    setCanvasAutoSize() {},
-
     onClickAddSquare() {
+      const {left, top} = this.computeAllowablePosition()
+
       var rect = new fabric.Rect({
-        left: 100,
-        top: 100,
-        fill: 'red',
-        width: 20,
-        height: 20,
+        left,
+        top,
+        fill: 'rgba(0, 0, 0, 0)',
+        width: 200,
+        height: 200,
+        stroke: 'red',
+        strokeWidth: 5,
+        strokeUniform: true,
       })
 
       this.canvas.add(rect)
     },
-
-    onClickSetBackground() {},
 
     setImageFromUrl(url) {
       fabric.Image.fromURL(url, image => {
@@ -126,7 +185,15 @@ export default {
           this.canvas.renderAll()
         });
       })
-    }
+    },
+
+    computeAllowablePosition() {
+        return {
+          left: 30,
+          top: 30,
+        }
+    },
+
   },
 
   watch: {
@@ -145,7 +212,3 @@ export default {
   destroyed() { }
 }
 </script>
-
-
-<style lang="css">
-</style>
