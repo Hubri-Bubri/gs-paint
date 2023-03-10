@@ -1,7 +1,7 @@
 <template>
   <div class="gs-paint-editor">
 
-    <b-card header-tag="header" no-body>
+    <b-card header-tag="header" no-body bg-variant="light">
       <template #header>
         <b-button-toolbar>
           <b-button-group size="sm" class="mr-1">
@@ -16,45 +16,57 @@
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickAddArrow" variant="secondary">
-              <b-icon icon="forward"></b-icon> Arrow
-            </b-button>
+            <b-dropdown>
+              <template #button-content>
+                <b-icon icon="plus-square"></b-icon> Insert
+              </template>
 
-            <b-button @click="onClickAddCircle" variant="secondary">
-              <b-icon icon="circle"></b-icon> Circle
-            </b-button>
+              <b-dropdown-item href="#" @click="onClickAddArrow">
+                <b-icon icon="forward"></b-icon> Arrow
+              </b-dropdown-item>
 
-            <b-button @click="onClickAddSquare" variant="secondary">
-              <b-icon icon="square"></b-icon> Square
-            </b-button>
+              <b-dropdown-item href="#" @click="onClickAddCircle">
+                <b-icon icon="circle"></b-icon> Circle
+              </b-dropdown-item>
 
-            <b-button @click="onClickAddSquare" variant="secondary">
-              <b-icon icon="cursor-text"></b-icon> Text
-            </b-button>
+              <b-dropdown-item href="#" @click="onClickAddSquare">
+                <b-icon icon="square"></b-icon> Square
+              </b-dropdown-item>
 
-            <b-button @click="onClickDelete" variant="secondary">
-              <b-icon icon="trash2"></b-icon> Delete
-            </b-button>
+              <b-dropdown-item href="#" @click="onClickAddSquare">
+                <b-icon icon="cursor-text"></b-icon> Text
+              </b-dropdown-item>
+
+              <b-dropdown-item href="#" @click="onClickEnebleDraw">
+                <b-icon icon="pencil"></b-icon> Draw
+              </b-dropdown-item>
+
+            </b-dropdown>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickBorder" variant="secondary">
+            <b-button @click="onClickBorder" variant="secondary" :disabled="!active">
               <b-icon icon="dash-lg"></b-icon> Border
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickFill('rgb(40, 167, 69)')" variant="success">
+            <b-button @click="onClickFill('rgb(40, 167, 69)')" variant="success" :disabled="!active">
               <b-icon icon="brush-fill"></b-icon>
             </b-button>
-            <b-button @click="onClickFill('rgb(255, 193, 7)')" variant="warning">
+            <b-button @click="onClickFill('rgb(255, 193, 7)')" variant="warning" :disabled="!active">
               <b-icon icon="brush-fill"></b-icon>
             </b-button>
-            <b-button @click="onClickFill('rgb(220, 53, 69)')" variant="danger">
+            <b-button @click="onClickFill('rgb(220, 53, 69)')" variant="danger" :disabled="!active">
               <b-icon icon="brush-fill"></b-icon>
             </b-button>
           </b-button-group>
 
+          <b-button-group size="sm" class="mr-1">
+            <b-button @click="onClickDelete" variant="secondary" :disabled="!active">
+              <b-icon icon="trash2"></b-icon> Delete
+            </b-button>
+          </b-button-group>
         </b-button-toolbar>
       </template>
 
@@ -83,7 +95,10 @@ export default {
   },
 
   data() {
-    return {}
+    return {
+      active: false,
+      mode: 'ready',
+    }
   },
 
   methods: {
@@ -108,53 +123,44 @@ export default {
     },
 
     onClickBorder() {
-      const object = this.canvas.getActiveObject()
+      const objects = this.canvas.getActiveObjects()
 
-      if (object == null) {
-        return
+      for (const object of objects) {
+        object.set({
+          strokeWidth: object.strokeWidth ? 0 : 5,
+        })
       }
-
-      let strokeWidth = object.strokeWidth
-
-      if (strokeWidth > 0) {
-        strokeWidth = 0
-      } else {
-        strokeWidth = 5
-      }
-
-      object.set({
-        strokeWidth,
-      })
 
       this.canvas.renderAll()
     },
 
     onClickFill(fill) {
-      const object = this.canvas.getActiveObject()
+      const objects = this.canvas.getActiveObjects()
 
-      if (object == null) {
-        return
+      for (const object of objects) {
+        object.set({
+          fill,
+        })
       }
-
-      object.set({
-        fill,
-      })
 
       this.canvas.renderAll()
     },
 
     onClickAddCircle() {
+      const {left, top} = this.computeAllowablePosition()
+
       var circle = new fabric.Circle({
         radius: 100,
-        fill: 'green',
-        left: 100,
-        top: 100,
-        stroke: 'red',
-        strokeWidth: 5,
-        strokeUniform: true,
+        left,
+        top,
+        ...this.getObjectBaseValues(),
       });
 
       this.canvas.add(circle)
+    },
+
+    onClickEnebleDraw() {
+
     },
 
     onClickAddArrow() {},
@@ -165,12 +171,7 @@ export default {
       var rect = new fabric.Rect({
         left,
         top,
-        fill: 'rgba(0, 0, 0, 0)',
-        width: 200,
-        height: 200,
-        stroke: 'red',
-        strokeWidth: 5,
-        strokeUniform: true,
+        ...this.getObjectBaseValues(),
       })
 
       this.canvas.add(rect)
@@ -188,12 +189,29 @@ export default {
     },
 
     computeAllowablePosition() {
-        return {
-          left: 30,
-          top: 30,
-        }
+      return {
+        left: 30,
+        top: 30,
+      }
     },
 
+    setActiveObjectValues(values) {},
+    getActiveObjectValue(name) {},
+    oneOfModes(...modes) {
+
+    },
+
+    getObjectBaseValues() {
+      return {
+        width: 200,
+        height: 200,
+        fill: 'rgba(0, 0, 0, 0)',
+        stroke: 'red',
+        strokeWidth: 3,
+        strokeUniform: true,
+        objectCaching: false,
+      }
+    },
   },
 
   watch: {
@@ -206,7 +224,15 @@ export default {
   },
 
   mounted() {
-    this.canvas = new fabric.Canvas('canvas')
+    this.canvas = new fabric.Canvas('canvas', {uniformScaling: false})
+
+    this.canvas.on('selection:created', event => {
+      this.active = true
+    })
+
+    this.canvas.on('selection:cleared', event => {
+      this.active = false
+    })
   },
 
   destroyed() { }
