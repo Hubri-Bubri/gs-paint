@@ -5,25 +5,20 @@
       <template #header>
         <b-button-toolbar>
           <b-button-group size="sm" class="mr-1">
+            <slot name="left-btn-group"></slot>
+          </b-button-group>
 
-            <b-button @click="onClickSave" variant="secondary">
+          <b-button-group size="sm" class="mr-1">
+            <b-button @click="onClickSave" variant="primary">
               <b-icon icon="sd-card"></b-icon> Save
-            </b-button>
-
-            <b-button @click="onClickLoad" variant="secondary">
-              <b-icon icon="folder2-open"></b-icon> Open
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-dropdown>
+            <b-dropdown variant="primary">
               <template #button-content>
-                <b-icon icon="plus-square"></b-icon> Insert
+                <b-icon icon="plus"></b-icon> Object
               </template>
-
-              <b-dropdown-item href="#" @click="onClickAddArrow">
-                <b-icon icon="forward"></b-icon> Arrow
-              </b-dropdown-item>
 
               <b-dropdown-item href="#" @click="onClickAddCircle">
                 <b-icon icon="circle"></b-icon> Circle
@@ -36,37 +31,57 @@
               <b-dropdown-item href="#" @click="onClickAddSquare">
                 <b-icon icon="cursor-text"></b-icon> Text
               </b-dropdown-item>
-
-              <b-dropdown-item href="#" @click="onClickEnebleDraw">
-                <b-icon icon="pencil"></b-icon> Draw
-              </b-dropdown-item>
-
             </b-dropdown>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickBorder" variant="secondary" :disabled="!active">
-              <b-icon icon="dash-lg"></b-icon> Border
+            <b-button @click="onClickToogleArrow" variant="primary">
+              <b-icon :icon="mode == 'arrow' ? 'forward-fill' : 'forward'"></b-icon>
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickFill('rgb(40, 167, 69)')" variant="success" :disabled="!active">
-              <b-icon icon="brush-fill"></b-icon>
-            </b-button>
-            <b-button @click="onClickFill('rgb(255, 193, 7)')" variant="warning" :disabled="!active">
-              <b-icon icon="brush-fill"></b-icon>
-            </b-button>
-            <b-button @click="onClickFill('rgb(220, 53, 69)')" variant="danger" :disabled="!active">
-              <b-icon icon="brush-fill"></b-icon>
+            <b-button @click="onClickToogleDraw" variant="primary">
+              <b-icon :icon="mode == 'draw' ? 'pencil-fill' : 'pencil'"></b-icon>
             </b-button>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickDelete" variant="secondary" :disabled="!active">
-              <b-icon icon="trash2"></b-icon> Delete
+            <b-form-select v-model="activeObjectColorProperty" :disabled="!oneOfModes('selection')">
+              <b-form-select-option value="fill">Fill</b-form-select-option>
+              <b-form-select-option value="stroke">Stroke</b-form-select-option>
+            </b-form-select>
+
+            <b-button @click="onClickColor('rgb(0, 123, 255)')" variant="primary" :disabled="!oneOfModes('selection')">
+              <b-icon icon="droplet"></b-icon>
+            </b-button>
+            <b-button @click="onClickColor('rgb(40, 167, 69)')" variant="success" :disabled="!oneOfModes('selection')">
+              <b-icon icon="droplet"></b-icon>
+            </b-button>
+            <b-button @click="onClickColor('rgb(255, 193, 7)')" variant="warning" :disabled="!oneOfModes('selection')">
+              <b-icon icon="droplet"></b-icon>
+            </b-button>
+            <b-button @click="onClickColor('rgb(220, 53, 69)')" variant="danger" :disabled="!oneOfModes('selection')">
+              <b-icon icon="droplet"></b-icon>
+            </b-button>
+            <b-button @click="onClickColor('rgb(0, 0, 0)')" variant="dark" :disabled="!oneOfModes('selection')">
+              <b-icon icon="droplet"></b-icon>
+            </b-button>
+            <b-button variant="primary" @click="onClickOpacity('rgb(220, 53, 69)')" :disabled="!oneOfModes('selection')">
+              <b-icon icon="brightness-high"></b-icon> {{activeObjectOpacity * 4}}
             </b-button>
           </b-button-group>
+
+          <b-button @click="onClickStroke" variant="primary" :disabled="!oneOfModes('selection')" class="mr-1">
+            <b-icon icon="dash-lg"></b-icon> {{activeObjectStrokeWidth}}
+          </b-button>
+
+          <b-button-group size="sm" class="mr-1">
+            <b-button @click="onClickDelete" variant="primary" :disabled="!oneOfModes('selection')">
+              <b-icon icon="trash2"></b-icon>
+            </b-button>
+          </b-button-group>
+
         </b-button-toolbar>
       </template>
 
@@ -88,7 +103,7 @@ export default {
       default: null,
     },
 
-    json: {
+    schema: {
       type: [String, Object],
       default: null,
     },
@@ -96,8 +111,10 @@ export default {
 
   data() {
     return {
-      active: false,
-      mode: 'ready',
+      mode: 'waiting',
+      activeObjectColorProperty: 'fill',
+      activeObjectOpacity: 1,
+      activeObjectStrokeWidth: 0,
     }
   },
 
@@ -122,28 +139,135 @@ export default {
       }
     },
 
-    onClickBorder() {
+    onClickStroke() {
       const objects = this.canvas.getActiveObjects()
+
+      this.activeObjectStrokeWidth += 2
+
+      if (this.activeObjectStrokeWidth > 8) {
+        this.activeObjectStrokeWidth = 0
+      }
 
       for (const object of objects) {
         object.set({
-          strokeWidth: object.strokeWidth ? 0 : 5,
+          strokeWidth: this.activeObjectStrokeWidth,
         })
       }
 
       this.canvas.renderAll()
     },
 
-    onClickFill(fill) {
-      const objects = this.canvas.getActiveObjects()
+    onClickColor(colorRgb, opacity) {
+      if (colorRgb !== undefined && this.activeObjectOpacity === 0) {
+        this.activeObjectOpacity = 1
+      }
 
-      for (const object of objects) {
+      for (const object of this.canvas.getActiveObjects()) {
+        const color = fabric.Color.fromRgba(
+          colorRgb === undefined ? object[this.activeObjectColorProperty] || this.emptyColor : colorRgb
+        )
+
+        color.setAlpha(
+          opacity === undefined ? this.activeObjectOpacity : opacity
+        )
+
         object.set({
-          fill,
+          [this.activeObjectColorProperty]: color.toRgba(),
         })
       }
 
       this.canvas.renderAll()
+    },
+
+    onClickOpacity() {
+      this.activeObjectOpacity += .25
+
+      if (this.activeObjectOpacity > 1) {
+        this.activeObjectOpacity = 0
+      }
+
+      this.onClickColor(undefined, this.activeObjectOpacity)
+    },
+
+    onClickToogleDraw() {
+      if (this.mode === 'draw') {
+        this.switchToMode('waiting')
+      } else {
+        this.switchToMode('draw')
+      }
+
+      this.canvas.isDrawingMode = this.mode === 'draw'
+    },
+
+    onClickToogleArrow() {
+      if (this.mode == 'arrow') {
+        this.switchToMode('waiting')
+      } else {
+        this.switchToMode('arrow')
+        this.onClickAddArrow()
+      }
+    },
+
+    onClickAddArrow() {
+      const {left, top} = this.computeAllowablePosition()
+
+      const line = new fabric.Line([left, top, left, top + 50], {
+        fill: 'rgb(220, 53, 69)',
+        stroke: 'rgb(220, 53, 69)',
+        strokeWidth: 5,
+        evented: true,
+        originX: 'center',
+        originY: 'center',
+      })
+
+      const triangle = new fabric.Triangle({
+        left,
+        top: top,
+        width: 15,
+        height: 10,
+        stroke: 'rgb(0, 0, 0, 0)',
+        strokeWidth: 0,
+        fill: 'rgb(220, 53, 69)',
+        originX: 'center',
+        originY: 'bottom',
+      })
+
+      this.canvas.add(triangle)
+      this.canvas.add(line)
+
+      triangle.on('moving', event => {
+        line.set({
+          x1: triangle.left,
+          y1: triangle.top,
+        })
+        line.setCoords()
+
+        const hypotenuse = Math.sqrt(Math.pow(line.x1 - line.x2, 2) + Math.pow(line.y1 - line.y2, 2))
+        const cathetus = Math.abs(line.x1 - line.x2)
+
+        let angle = Math.acos(cathetus / hypotenuse) * 180 / Math.PI
+
+        // console.log('angle', angle)
+
+        triangle.set({
+          angle: 90 - angle,
+        })
+
+        this.canvas.renderAll()
+      })
+
+      line.on('moving', event => {
+        console.log(line.left)
+        console.log(line.top)
+      })
+
+      line.on('removed', event => {
+        this.canvas.remove(triangle)
+      })
+
+      triangle.on('removed', event => {
+        this.canvas.remove(line)
+      })
     },
 
     onClickAddCircle() {
@@ -153,17 +277,11 @@ export default {
         radius: 100,
         left,
         top,
-        ...this.getObjectBaseValues(),
+        ...this.objectBaseConfig,
       });
 
       this.canvas.add(circle)
     },
-
-    onClickEnebleDraw() {
-
-    },
-
-    onClickAddArrow() {},
 
     onClickAddSquare() {
       const {left, top} = this.computeAllowablePosition()
@@ -171,10 +289,26 @@ export default {
       var rect = new fabric.Rect({
         left,
         top,
-        ...this.getObjectBaseValues(),
+        ...this.objectBaseConfig,
       })
 
       this.canvas.add(rect)
+    },
+
+    computeActiveObjectOpacity() {
+      var opacyties = this.canvas.getActiveObjects().map(object => {
+        return fabric.Color.fromRgba(object[this.activeObjectColorProperty] || this.emptyColor).getAlpha()
+      })
+
+      this.activeObjectOpacity = Math.min(...opacyties)
+    },
+
+    computeActiveObjectStrokeWidth() {
+      var widthes = this.canvas.getActiveObjects().map(object => {
+        return object.strokeWidth
+      })
+
+      this.activeObjectStrokeWidth = Math.min(...widthes)
     },
 
     setImageFromUrl(url) {
@@ -194,47 +328,89 @@ export default {
         top: 30,
       }
     },
-
-    setActiveObjectValues(values) {},
-    getActiveObjectValue(name) {},
+  
     oneOfModes(...modes) {
-
+      return modes.includes(this.mode)
     },
 
-    getObjectBaseValues() {
-      return {
-        width: 200,
-        height: 200,
-        fill: 'rgba(0, 0, 0, 0)',
-        stroke: 'red',
-        strokeWidth: 3,
-        strokeUniform: true,
-        objectCaching: false,
+    switchToMode(mode) {
+      if (this.mode == mode) {
+        return
       }
+
+      if (this.mode == 'selection') {
+        this.canvas.discardActiveObject()
+        this.canvas.renderAll()
+      }
+
+      if (this.mode === 'draw') {
+        this.canvas.isDrawingMode = false
+      }
+
+      this.mode = mode
     },
+
   },
 
   watch: {
     url: {
-      handler () {
-        this.setImageFromUrl(this.url)
+      handler(value) {
+        this.setImageFromUrl(value)
       },
       immediate: true
-    }
+    },
+    activeObjectColorProperty: {
+      handler(value) {
+        this.computeActiveObjectOpacity()
+      },
+    },
   },
 
   mounted() {
-    this.canvas = new fabric.Canvas('canvas', {uniformScaling: false})
+    this.emptyColor = 'rgb(0, 0, 0, 0)'
+
+    this.objectBaseConfig = {
+        width: 200,
+        height: 200,
+        fill: 'rgba(0, 0, 0, 0)',
+        stroke: 'rgba(0, 0, 0, 1)',
+        strokeWidth: 2,
+        strokeUniform: true,
+        objectCaching: false,
+    }
+
+    this.canvas = new fabric.Canvas('canvas', {
+      uniformScaling: false,
+    })
+
+    this.canvas.freeDrawingBrush = new fabric.PencilBrush(this.canvas);
+
+    this.canvas.freeDrawingBrush.width = this.objectBaseConfig.strokeWidth * 2
+    this.canvas.freeDrawingBrush.color = 'rgb(0, 0, 0)'
 
     this.canvas.on('selection:created', event => {
-      this.active = true
+      this.switchToMode('selection')
+      this.computeActiveObjectOpacity()
+      this.computeActiveObjectStrokeWidth()
+    })
+
+    this.canvas.on('selection:updated', event => {
+      this.computeActiveObjectOpacity()
+      this.computeActiveObjectStrokeWidth()
     })
 
     this.canvas.on('selection:cleared', event => {
-      this.active = false
+      this.switchToMode('waiting')
     })
   },
 
   destroyed() { }
 }
 </script>
+
+
+<style lang="css" scoped>
+.btn-group .custom-select {
+  width: auto;
+}
+</style>
