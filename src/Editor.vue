@@ -247,8 +247,6 @@ export default {
 
         let angle = Math.acos(cathetus / hypotenuse) * 180 / Math.PI
 
-        // console.log('angle', angle)
-
         triangle.set({
           angle: 90 - angle,
         })
