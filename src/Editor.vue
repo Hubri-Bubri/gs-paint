@@ -17,7 +17,7 @@
           <b-button-group size="sm" class="mr-1">
             <b-dropdown variant="primary">
               <template #button-content>
-                <b-icon icon="plus"></b-icon> Object
+                <b-icon icon="plus-circle"></b-icon> Shape
               </template>
 
               <b-dropdown-item href="#" @click="onClickAddCircle">
@@ -28,21 +28,19 @@
                 <b-icon icon="square"></b-icon> Square
               </b-dropdown-item>
 
-              <b-dropdown-item href="#" @click="onClickAddSquare">
+              <b-dropdown-item href="#" @click="onClickAddText">
                 <b-icon icon="cursor-text"></b-icon> Text
+              </b-dropdown-item>
+
+              <b-dropdown-item @click="onClickAddArrow">
+                <b-icon icon="forward"></b-icon> Arrow
               </b-dropdown-item>
             </b-dropdown>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickToogleArrow" variant="primary">
-              <b-icon :icon="mode == 'arrow' ? 'forward-fill' : 'forward'"></b-icon>
-            </b-button>
-          </b-button-group>
-
-          <b-button-group size="sm" class="mr-1">
             <b-button @click="onClickToogleDraw" variant="primary">
-              <b-icon :icon="mode == 'draw' ? 'pencil-fill' : 'pencil'"></b-icon>
+              <b-icon :icon="mode == 'draw' ? 'pencil-fill' : 'pencil'"></b-icon> Draw
             </b-button>
           </b-button-group>
 
@@ -75,6 +73,15 @@
           <b-button @click="onClickStroke" variant="primary" :disabled="!oneOfModes('selection')" class="mr-1">
             <b-icon icon="dash-lg"></b-icon> {{activeObjectStrokeWidth}}
           </b-button>
+          
+          <b-button-group class="mr-1">
+            <b-button variant="primary">
+              A
+            </b-button>
+            <b-button variant="primary">
+              a
+            </b-button>
+          </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
             <b-button @click="onClickDelete" variant="primary" :disabled="!oneOfModes('selection')">
@@ -199,82 +206,47 @@ export default {
       this.canvas.isDrawingMode = this.mode === 'draw'
     },
 
-    onClickToogleArrow() {
-      if (this.mode == 'arrow') {
-        this.switchToMode('waiting')
-      } else {
-        this.switchToMode('arrow')
-        this.onClickAddArrow()
-      }
-    },
-
     onClickAddArrow() {
-      const {left, top} = this.computeAllowablePosition()
+      const left = 0
+      const top = 0
+      const strokeWidth = 2
 
-      const line = new fabric.Line([left, top, left, top + 50], {
-        fill: 'rgb(220, 53, 69)',
-        stroke: 'rgb(220, 53, 69)',
-        strokeWidth: 5,
+      const line = new fabric.Rect({
+      ...this.objectBaseConfig,
+        width: 5,
+        height: 200,
+        stroke: 'rgb(0, 0, 0, 1)',
+        strokeWidth,
         evented: true,
         originX: 'center',
-        originY: 'center',
       })
 
       const triangle = new fabric.Triangle({
+      ...this.objectBaseConfig,
         left,
-        top: top,
+        top: top + strokeWidth,
         width: 15,
         height: 10,
-        stroke: 'rgb(0, 0, 0, 0)',
-        strokeWidth: 0,
-        fill: 'rgb(220, 53, 69)',
+        stroke: 'rgb(0, 0, 0, 1)',
+        strokeWidth,
         originX: 'center',
         originY: 'bottom',
       })
 
-      this.canvas.add(triangle)
-      this.canvas.add(line)
-
-      triangle.on('moving', event => {
-        line.set({
-          x1: triangle.left,
-          y1: triangle.top,
-        })
-        line.setCoords()
-
-        const hypotenuse = Math.sqrt(Math.pow(line.x1 - line.x2, 2) + Math.pow(line.y1 - line.y2, 2))
-        const cathetus = Math.abs(line.x1 - line.x2)
-
-        let angle = Math.acos(cathetus / hypotenuse) * 180 / Math.PI
-
-        triangle.set({
-          angle: 90 - angle,
-        })
-
-        this.canvas.renderAll()
+      const group = new fabric.Group([line, triangle], {
+        left,
+        top,
+        objectCaching: false,
       })
 
-      line.on('moving', event => {
-        console.log(line.left)
-        console.log(line.top)
-      })
-
-      line.on('removed', event => {
-        this.canvas.remove(triangle)
-      })
-
-      triangle.on('removed', event => {
-        this.canvas.remove(line)
-      })
+      this.canvas.add(group)
     },
 
     onClickAddCircle() {
-      const {left, top} = this.computeAllowablePosition()
-
       var circle = new fabric.Circle({
         radius: 100,
-        left,
-        top,
+        left: 0,
+        top: 0,
         ...this.objectBaseConfig,
       });
 
@@ -282,15 +254,25 @@ export default {
     },
 
     onClickAddSquare() {
-      const {left, top} = this.computeAllowablePosition()
-
       var rect = new fabric.Rect({
-        left,
-        top,
+        left: 0,
+        top: 0,
+        width: 200,
+        height: 200,
         ...this.objectBaseConfig,
       })
 
       this.canvas.add(rect)
+    },
+
+    onClickAddText() {
+      var textbox = new fabric.Textbox('Text', {
+        ...this.objectBaseConfig,
+        fill: 'rgb(0, 0, 0, 1)',
+        width: 200,
+      });
+
+      this.canvas.add(textbox)
     },
 
     computeActiveObjectOpacity() {
@@ -318,13 +300,6 @@ export default {
           this.canvas.renderAll()
         });
       })
-    },
-
-    computeAllowablePosition() {
-      return {
-        left: 30,
-        top: 30,
-      }
     },
   
     oneOfModes(...modes) {
@@ -368,8 +343,6 @@ export default {
     this.emptyColor = 'rgb(0, 0, 0, 0)'
 
     this.objectBaseConfig = {
-        width: 200,
-        height: 200,
         fill: 'rgba(0, 0, 0, 0)',
         stroke: 'rgba(0, 0, 0, 1)',
         strokeWidth: 2,
@@ -399,6 +372,14 @@ export default {
 
     this.canvas.on('selection:cleared', event => {
       this.switchToMode('waiting')
+    })
+
+    this.canvas.on('object:added', event => {
+      if (this.mode === 'draw') {
+        return
+      }
+
+      event.target.center()
     })
   },
 
