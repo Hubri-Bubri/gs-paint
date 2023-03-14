@@ -77,7 +77,7 @@
           <b-button @click="onClickStroke" variant="primary" :disabled="!oneOfModes('selection')" class="mr-1">
             <b-icon icon="dash-lg"></b-icon> {{activeObjectStrokeWidth}}
           </b-button>
-          
+
           <b-button-group class="mr-1">
             <b-button variant="primary">
               A
@@ -106,6 +106,7 @@
 
 <script lang="js">
 import { fabric } from 'fabric'
+
 
 export default {
   props: {
@@ -200,6 +201,8 @@ export default {
       this.onClickColor(undefined, this.activeObjectOpacity)
     },
 
+    setObjectColor(object, color, opacity) {},
+
     onClickToogleDraw() {
       if (this.mode === 'draw') {
         this.switchToMode('waiting')
@@ -211,59 +214,78 @@ export default {
     },
 
     onClickAddArrow() {
-      const left = 0
-      const top = 0
-      const strokeWidth = 2
+      const {fill, stroke, strokeWidth, strokeUniform, objectCaching} = this.objectDefaultConfig
+      const left = 0, top = 0
 
-      const line = new fabric.Rect({
-      ...this.objectBaseConfig,
+      const rect = new fabric.Rect({
         width: 10,
         height: 200,
-        stroke: 'rgb(0, 0, 0, 1)',
-        strokeWidth,
-        evented: true,
         originX: 'center',
+
+        strokeWidth,
+        fill,
+        stroke,
+        strokeUniform,
+        objectCaching,
       })
 
       const triangle = new fabric.Triangle({
-      ...this.objectBaseConfig,
         left,
         top: top + strokeWidth,
         width: 25,
         height: 25,
-        stroke: 'rgb(0, 0, 0, 1)',
-        strokeWidth,
         originX: 'center',
         originY: 'bottom',
+
+        strokeWidth,
+        fill,
+        stroke,
+        strokeUniform,
+        objectCaching,
       })
 
-      const group = new fabric.Group([line, triangle], {
+      const group = new fabric.Group([rect, triangle], {
         left,
         top,
-        objectCaching: false,
+        objectCaching,
+        strokeUniform,
       })
 
       this.canvas.add(group)
     },
 
     onClickAddCircle() {
+      const {fill, stroke, strokeWidth, strokeUniform, objectCaching} = this.objectDefaultConfig
+
       var circle = new fabric.Circle({
         radius: 100,
         left: 0,
         top: 0,
-        ...this.objectBaseConfig,
+
+        strokeWidth,
+        fill,
+        stroke,
+        strokeUniform,
+        objectCaching,
       });
 
       this.canvas.add(circle)
     },
 
     onClickAddSquare() {
+      const {fill, stroke, strokeWidth, strokeUniform, objectCaching} = this.objectDefaultConfig
+
       var rect = new fabric.Rect({
         left: 0,
         top: 0,
         width: 200,
         height: 200,
-        ...this.objectBaseConfig,
+
+        fill,
+        stroke,
+        strokeWidth,
+        strokeUniform,
+        objectCaching,
       })
 
       this.canvas.add(rect)
@@ -272,10 +294,10 @@ export default {
     onClickAddLine() {},
 
     onClickAddText() {
+      const {objectCaching} = this.objectDefaultConfig
+
       var textbox = new fabric.Textbox('Text', {
-        ...this.objectBaseConfig,
-        fill: 'rgb(0, 0, 0, 1)',
-        width: 200,
+        objectCaching,
       })
 
       this.canvas.add(textbox)
@@ -348,7 +370,7 @@ export default {
   mounted() {
     this.emptyColor = 'rgb(0, 0, 0, 0)'
 
-    this.objectBaseConfig = {
+    this.objectDefaultConfig = {
         fill: 'rgba(0, 0, 0, 0)',
         stroke: 'rgba(0, 0, 0, 1)',
         strokeWidth: 2,
@@ -362,7 +384,7 @@ export default {
 
     this.canvas.freeDrawingBrush = new fabric.PencilBrush(this.canvas);
 
-    this.canvas.freeDrawingBrush.width = this.objectBaseConfig.strokeWidth * 2
+    this.canvas.freeDrawingBrush.width = this.objectDefaultConfig.strokeWidth * 2
     this.canvas.freeDrawingBrush.color = 'rgb(0, 0, 0)'
 
     this.canvas.on('selection:created', event => {
