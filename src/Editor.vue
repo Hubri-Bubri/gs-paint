@@ -35,6 +35,10 @@
               <b-dropdown-item @click="onClickAddArrow">
                 <b-icon icon="forward"></b-icon> Arrow
               </b-dropdown-item>
+
+              <b-dropdown-item @click="onClickAddLine">
+                <b-icon icon="arrow-right"></b-icon> Line
+              </b-dropdown-item>
             </b-dropdown>
           </b-button-group>
 
@@ -213,7 +217,7 @@ export default {
 
       const line = new fabric.Rect({
       ...this.objectBaseConfig,
-        width: 5,
+        width: 10,
         height: 200,
         stroke: 'rgb(0, 0, 0, 1)',
         strokeWidth,
@@ -225,8 +229,8 @@ export default {
       ...this.objectBaseConfig,
         left,
         top: top + strokeWidth,
-        width: 15,
-        height: 10,
+        width: 25,
+        height: 25,
         stroke: 'rgb(0, 0, 0, 1)',
         strokeWidth,
         originX: 'center',
@@ -265,12 +269,14 @@ export default {
       this.canvas.add(rect)
     },
 
+    onClickAddLine() {},
+
     onClickAddText() {
       var textbox = new fabric.Textbox('Text', {
         ...this.objectBaseConfig,
         fill: 'rgb(0, 0, 0, 1)',
         width: 200,
-      });
+      })
 
       this.canvas.add(textbox)
     },

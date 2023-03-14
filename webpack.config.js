@@ -6,6 +6,7 @@ module.exports = {
   mode: 'development',
   entry: {
     editor: './src/Editor.vue',
+    index: './src/index.js',
     demo: './src/demo/index.js',
   },
   module: {
