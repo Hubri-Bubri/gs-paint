@@ -291,7 +291,40 @@ export default {
       this.canvas.add(rect)
     },
 
-    onClickAddLine() {},
+    onClickAddLine() {
+      const {objectCaching, stroke, strokeWidth} = this.objectDefaultConfig
+      const left = 10, top = 10
+
+      const line = new fabric.Line([left, top, left, top + 200], {
+        strokeWidth,
+        objectCaching,
+        stroke,
+        strokeWidth: 5,
+        originX: 'center',
+        originY: 'center',
+      })
+
+      const triangle = new fabric.Triangle({
+        left,
+        top,
+        width: 15,
+        height: 10,
+        stroke: 'rgb(0, 0, 0, 0)',
+        strokeWidth: 0,
+        fill: 'rgb(220, 53, 69)',
+        originX: 'center',
+        originY: 'bottom',
+      })
+
+      this.canvas.add(line)
+
+      line.center()
+      line.setCoords()
+
+      console.log(line.aCoords)
+
+      this.canvas.add(triangle)
+    },
 
     onClickAddText() {
       const {objectCaching} = this.objectDefaultConfig
