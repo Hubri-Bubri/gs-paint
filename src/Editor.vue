@@ -28,16 +28,12 @@
                 <b-icon icon="square"></b-icon> Square
               </b-dropdown-item>
 
-              <b-dropdown-item href="#" @click="onClickAddText">
-                <b-icon icon="cursor-text"></b-icon> Text
-              </b-dropdown-item>
-
               <b-dropdown-item @click="onClickAddArrow">
                 <b-icon icon="forward"></b-icon> Arrow
               </b-dropdown-item>
 
-              <b-dropdown-item @click="onClickAddLine">
-                <b-icon icon="arrow-right"></b-icon> Line
+              <b-dropdown-item href="#" @click="onClickAddText">
+                <b-icon icon="cursor-text"></b-icon> Text
               </b-dropdown-item>
             </b-dropdown>
           </b-button-group>
@@ -110,13 +106,8 @@ import { fabric } from 'fabric'
 
 export default {
   props: {
-    url: {
-      type: String,
-      default: null,
-    },
-
-    schema: {
-      type: [String, Object],
+    image: {
+      type: Object,
       default: null,
     },
   },
@@ -142,13 +133,15 @@ export default {
     },
 
     onClickSave() {
-      this.state = this.canvas.toJSON()
-    },
-
-    onClickLoad() {
-      if (this.state) {
-        this.canvas.loadFromJSON(this.state)
-      }
+      this.$emit('save', {
+        url: this.image.url,
+        dataUrl: this.canvas.toDataURL(),
+        schema: {
+          height: this.canvas.getHeight(),
+          width: this.canvas.getWidth(),
+          json: this.canvas.toJSON(),
+        },
+      })
     },
 
     onClickStroke() {
@@ -251,7 +244,7 @@ export default {
         strokeUniform,
       })
 
-      this.canvas.add(group)
+      this.addShapeToCanvas(group)
     },
 
     onClickAddCircle() {
@@ -269,7 +262,7 @@ export default {
         objectCaching,
       });
 
-      this.canvas.add(circle)
+      this.addShapeToCanvas(circle)
     },
 
     onClickAddSquare() {
@@ -288,10 +281,8 @@ export default {
         objectCaching,
       })
 
-      this.canvas.add(rect)
+      this.addShapeToCanvas(rect)
     },
-
-    onClickAddLine() {},
 
     onClickAddText() {
       const {objectCaching} = this.objectDefaultConfig
@@ -300,7 +291,15 @@ export default {
         objectCaching,
       })
 
-      this.canvas.add(textbox)
+      this.addShapeToCanvas(textbox)
+    },
+
+    addShapeToCanvas(shape, position='center') {
+      this.canvas.add(shape)
+
+      if (position === 'center') {
+        shape.center()
+      }
     },
 
     computeActiveObjectOpacity() {
@@ -319,7 +318,7 @@ export default {
       this.activeObjectStrokeWidth = Math.min(...widthes)
     },
 
-    setImageFromUrl(url) {
+    loadFromUrl(url) {
       fabric.Image.fromURL(url, image => {
         this.canvas.setHeight(image.height)
         this.canvas.setWidth(image.width)
@@ -328,6 +327,12 @@ export default {
           this.canvas.renderAll()
         });
       })
+    },
+
+    loadFromSchema(schema) {
+      this.canvas.setHeight(schema.height)
+      this.canvas.setWidth(schema.width)
+      this.canvas.loadFromJSON(schema.json)
     },
   
     oneOfModes(...modes) {
@@ -351,15 +356,33 @@ export default {
       this.mode = mode
     },
 
+    load() {
+      this.canvas.clear()
+
+      if (this.image && this.image.schema) {
+        this.loadFromSchema(this.image.schema)
+      } else if (this.image && this.image.url) {
+        this.loadFromUrl(this.image.url)
+      } else {
+        this.canvas.setHeight(0)
+        this.canvas.setWidth(0)
+      }
+    },
+  },
+
+  computed: {
+    ready() {
+      return this.url || this.schema
+    },
   },
 
   watch: {
-    url: {
-      handler(value) {
-        this.setImageFromUrl(value)
+    image: {
+      handler() {
+        this.load()
       },
-      immediate: true
     },
+  
     activeObjectColorProperty: {
       handler(value) {
         this.computeActiveObjectOpacity()
@@ -402,16 +425,12 @@ export default {
       this.switchToMode('waiting')
     })
 
-    this.canvas.on('object:added', event => {
-      if (this.mode === 'draw') {
-        return
-      }
-
-      event.target.center()
-    })
+    this.load()
   },
 
-  destroyed() { }
+  destroyed() {
+    this.canvas.clear()
+  }
 }
 </script>
 
