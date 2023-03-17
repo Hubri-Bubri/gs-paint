@@ -1,5 +1,6 @@
 const path = require('path')
 const { VueLoaderPlugin } = require('vue-loader')
+const WebpackShellPluginNext = require('webpack-shell-plugin-next')
 
 
 module.exports = {
@@ -15,8 +16,16 @@ module.exports = {
       {test: /\.css$/, use: ['style-loader', 'css-loader']}
     ]
   },
+
   plugins: [
     new VueLoaderPlugin(),
+    new WebpackShellPluginNext({
+      onBuildEnd: {
+        scripts: [
+          'tar -cvzf gs-paint.tar.gz --exclude="node_modules" --exclude=".git" --exclude="gs-paint.tar.gz" --exclude=".DS_Store" -C .. gs-paint',
+        ],
+      }
+    }),
   ],
 
   devServer: {
