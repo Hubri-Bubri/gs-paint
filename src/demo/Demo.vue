@@ -8,10 +8,13 @@
       </b-list-group>
     </b-modal>
 
-    <Editor :image="image" @save="onSave">
+    <Editor :image="image" @change="onChange">
       <template #left-btn-group>
         <b-button v-b-modal.exploler variant="primary">
           <b-icon icon="folder2-open"></b-icon> Open
+        </b-button>
+        <b-button variant="primary">
+          <b-icon icon="image"></b-icon> View
         </b-button>
       </template>
     </Editor>
@@ -24,6 +27,10 @@ import Editor from "../Editor.vue";
 
 export default {
   components: { Editor },
+  model: {
+    prop: 'image',
+    event: 'change'
+  },
   data () {
     return {
       image: {
@@ -44,7 +51,7 @@ export default {
       this.$refs.exploler.hide()
     },
 
-    onSave(image) {
+    onChange(image) {
       this.image.schema = image.schema
     },
   },

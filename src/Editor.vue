@@ -103,7 +103,6 @@
 <script lang="js">
 import { fabric } from 'fabric'
 
-
 export default {
   props: {
     image: {
@@ -133,7 +132,7 @@ export default {
     },
 
     onClickSave() {
-      this.$emit('save', {
+      this.$emit('change', {
         url: this.image.url,
         dataUrl: this.canvas.toDataURL(),
         schema: {
@@ -145,7 +144,7 @@ export default {
     },
 
     onClickStroke() {
-      const objects = this.canvas.getActiveObjects()
+      const objects = this.getAsFlatActiveObjects()
 
       this.activeObjectStrokeWidth += 2
 
@@ -167,7 +166,7 @@ export default {
         this.activeObjectOpacity = 1
       }
 
-      for (const object of this.canvas.getActiveObjects()) {
+      for (const object of this.getAsFlatActiveObjects()) {
         const color = fabric.Color.fromRgba(
           colorRgb === undefined ? object[this.activeObjectColorProperty] || this.emptyColor : colorRgb
         )
@@ -302,8 +301,14 @@ export default {
       }
     },
 
+    getAsFlatActiveObjects() {
+      return this.canvas.getActiveObjects().reduce((array, value) => {
+        return array.concat(value.type == 'group' ? value.getObjects() : [value])
+      }, [])
+    },
+
     computeActiveObjectOpacity() {
-      var opacyties = this.canvas.getActiveObjects().map(object => {
+      var opacyties = this.getAsFlatActiveObjects().map(object => {
         return fabric.Color.fromRgba(object[this.activeObjectColorProperty] || this.emptyColor).getAlpha()
       })
 
@@ -311,7 +316,7 @@ export default {
     },
 
     computeActiveObjectStrokeWidth() {
-      var widthes = this.canvas.getActiveObjects().map(object => {
+      var widthes = this.getAsFlatActiveObjects().map(object => {
         return object.strokeWidth
       })
 
