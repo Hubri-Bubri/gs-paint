@@ -1,6 +1,6 @@
 {
   "name": "gs-paint",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "description": "Paint like editor",
   "main": "index.js",
   "author": "Martynov Alexandr",

@@ -92,7 +92,10 @@
         </b-button-toolbar>
       </template>
 
-      <b-card-body class="overflow-auto d-flex justify-content-center">
+      <b-card-body class="overflow-auto d-flex justify-content-center p-0">
+        <samp class="my-1" v-if="!ready">
+          [select image]
+        </samp>
         <canvas id="canvas" ref="canvas"></canvas>
       </b-card-body>
     </b-card>
@@ -377,7 +380,7 @@ export default {
 
   computed: {
     ready() {
-      return this.url || this.schema
+      return this.image && (this.image.url || this.image.schema)
     },
   },
 
