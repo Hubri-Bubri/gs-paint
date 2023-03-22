@@ -1,5 +1,5 @@
 <template>
-  <div class="demo-gs-paint-editor">
+  <div class="demo-gs-paint-editor d-flex justify-content-center align-items-center h-100">
     <b-modal id="exploler" ref="exploler" title="Expoler" centered>
       <b-list-group>
         <b-list-group-item href="#" v-for="image in images" :key="image.url" @click="onClickImage(image)">
@@ -8,16 +8,17 @@
       </b-list-group>
     </b-modal>
 
-    <Editor :image="image" @change="onChange">
-      <template #left-btn-group>
-        <b-button v-b-modal.exploler variant="primary">
-          <b-icon icon="folder2-open"></b-icon> Open
-        </b-button>
-        <b-button variant="primary">
-          <b-icon icon="image"></b-icon> View
-        </b-button>
-      </template>
-    </Editor>
+    <b-modal ref="popup" id="popup" title="Popup" size="lg" centered>
+      <Editor :image="image" @change="onChange">
+        <template #left-btn-group>
+          <b-button v-b-modal.exploler variant="primary">
+            <b-icon icon="folder2-open"></b-icon> Open
+          </b-button>
+        </template>
+      </Editor>
+    </b-modal>
+
+    <b-button v-b-modal.popup variant="primary">Open</b-button>
   </div>
 </template>
 
@@ -55,5 +56,19 @@ export default {
       this.image.schema = image.schema
     },
   },
+
+  mounted() {
+    this.$refs.popup.show()
+  }
 }
 </script>
+
+<style lang="css" scoped>
+.btn-group .custom-select {
+  width: auto;
+}
+
+.modal-lg {
+  max-width: 1000px !important;
+}
+</style>
