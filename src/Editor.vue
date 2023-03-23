@@ -376,6 +376,18 @@ export default {
         this.canvas.setWidth(0)
       }
     },
+
+    removeTabIndex () {
+      var parentElement = this.$el.parentElement;
+
+      while (parentElement) {
+        if (parentElement.hasAttribute('tabindex')) {
+          parentElement.removeAttribute('tabindex')
+          break
+        }
+        parentElement = parentElement.parentElement
+      }
+    },
   },
 
   computed: {
@@ -434,6 +446,7 @@ export default {
     })
 
     this.load()
+    this.removeTabIndex()
   },
 
   destroyed() {
