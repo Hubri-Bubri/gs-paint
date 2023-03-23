@@ -74,15 +74,6 @@
             <b-icon icon="dash-lg"></b-icon> {{activeObjectStrokeWidth}}
           </b-button>
 
-          <b-button-group class="mr-1">
-            <b-button variant="primary">
-              A
-            </b-button>
-            <b-button variant="primary">
-              a
-            </b-button>
-          </b-button-group>
-
           <b-button-group size="sm" class="mr-1">
             <b-button @click="onClickDelete" variant="primary" :disabled="!oneOfModes('selection')">
               <b-icon icon="trash2"></b-icon>

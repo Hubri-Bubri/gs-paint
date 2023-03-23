@@ -8,7 +8,7 @@
       </b-list-group>
     </b-modal>
 
-    <b-modal ref="popup" id="popup" title="Popup" size="lg" centered>
+    <b-modal ref="popup" id="popup" title="Popup" centered>
       <Editor :image="image" @change="onChange">
         <template #left-btn-group>
           <b-button v-b-modal.exploler variant="primary">
@@ -63,12 +63,12 @@ export default {
 }
 </script>
 
-<style lang="css" scoped>
+<style lang="css">
 .btn-group .custom-select {
   width: auto;
 }
 
-.modal-lg {
+#popup .modal-dialog {
   max-width: 1000px !important;
 }
 </style>
