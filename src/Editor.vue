@@ -45,6 +45,12 @@
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
+            <b-button @click="onClickRotate" variant="primary">
+              <b-icon icon="arrow-clockwise"></b-icon>
+            </b-button>
+          </b-button-group>
+
+          <b-button-group size="sm" class="mr-1">
             <b-form-select v-model="activeObjectColorProperty" :disabled="!oneOfModes('selection')">
               <b-form-select-option value="fill">Fill</b-form-select-option>
               <b-form-select-option value="stroke">Stroke</b-form-select-option>
@@ -115,6 +121,23 @@ export default {
   },
 
   methods: {
+    onClickRotate() {
+      const angle = (this.canvas.backgroundImage.angle + 90) % 360
+
+      if (angle % 180 === 0) {
+        this.canvas.setHeight(this.canvas.backgroundImage.height)
+        this.canvas.setWidth(this.canvas.backgroundImage.width)
+      } else {
+        this.canvas.setHeight(this.canvas.backgroundImage.width)
+        this.canvas.setWidth(this.canvas.backgroundImage.height)
+      }
+
+      this.canvas.backgroundImage.center()
+      this.canvas.backgroundImage.rotate(angle)
+
+      this.canvas.renderAll()
+    },
+
     onClickDelete() {
       const object = this.canvas.getActiveObject()
 
@@ -319,12 +342,16 @@ export default {
 
     loadFromUrl(url) {
       fabric.Image.fromURL(url, image => {
+        image.on('object:rotating', () => {
+
+        })
+
         this.canvas.setHeight(image.height)
         this.canvas.setWidth(image.width)
 
         this.canvas.setBackgroundImage(image, () => {
           this.canvas.renderAll()
-        });
+        })
       })
     },
 
