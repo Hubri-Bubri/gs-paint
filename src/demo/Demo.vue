@@ -29,6 +29,7 @@ export default {
     prop: 'image',
     event: 'change'
   },
+
   data () {
     return {
       image: {

@@ -368,15 +368,17 @@ export default {
       }
     },
 
-    removeTabIndex () {
-      var parentElement = this.$el.parentElement
+    removeTabIndex(renameTo='data-tabindex') {
+      var element = this.$el
 
-      while (parentElement) {
-        if (parentElement.hasAttribute('tabindex')) {
-          parentElement.removeAttribute('tabindex')
+      while (element = element.parentElement) {
+        if (element.hasAttribute('tabindex')) {
+          if (renameTo) {
+            element.setAttribute(renameTo, element.getAttribute('tabindex'))
+          }
+          element.removeAttribute('tabindex')
           break
         }
-        parentElement = parentElement.parentElement
       }
     },
   },
