@@ -1,2 +1,4 @@
 import Editor from './Editor.vue'
-export default Editor
+import GsEditorPlugin from './GsPaintPlugin.js'
+
+export {Editor, GsEditorPlugin}

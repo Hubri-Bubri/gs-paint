@@ -24,10 +24,7 @@
 
 
 <script lang="js">
-import Editor from "../Editor.vue";
-
 export default {
-  components: { Editor },
   model: {
     prop: 'image',
     event: 'change'
