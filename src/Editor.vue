@@ -52,7 +52,8 @@
 
           <b-button-group size="sm" class="mr-1">
             <b-form-select v-model="activeObjectColorProperty" :disabled="!oneOfModes('selection')">
-              <b-form-select-option value="fill">Fill</b-form-select-option>
+              <b-form-select-option value="full">Full</b-form-select-option>
+              <b-form-select-option value="fill">Background</b-form-select-option>
               <b-form-select-option value="stroke">Stroke</b-form-select-option>
             </b-form-select>
 
@@ -90,9 +91,6 @@
       </template>
 
       <b-card-body class="overflow-auto d-flex justify-content-center p-0">
-        <samp class="my-1" v-if="!ready">
-          [select image]
-        </samp>
         <canvas id="canvas" ref="canvas"></canvas>
       </b-card-body>
     </b-card>
@@ -114,9 +112,10 @@ export default {
   data() {
     return {
       mode: 'waiting',
-      activeObjectColorProperty: 'fill',
+      activeObjectColorProperty: 'full',
       activeObjectOpacity: 1,
       activeObjectStrokeWidth: 0,
+      ready: false,
     }
   },
 
@@ -179,22 +178,11 @@ export default {
     },
 
     onClickColor(colorRgb, opacity) {
-      if (colorRgb !== undefined && this.activeObjectOpacity === 0) {
-        this.activeObjectOpacity = 1
-      }
-
-      for (const object of this.getAsFlatActiveObjects()) {
-        const color = fabric.Color.fromRgba(
-          colorRgb === undefined ? object[this.activeObjectColorProperty] || this.emptyColor : colorRgb
-        )
-
-        color.setAlpha(
-          opacity === undefined ? this.activeObjectOpacity : opacity
-        )
-
-        object.set({
-          [this.activeObjectColorProperty]: color.toRgba(),
-        })
+      if (this.activeObjectColorProperty == 'full') {
+        this.setActiveObjectPropertyColor('fill', colorRgb, opacity)
+        this.setActiveObjectPropertyColor('stroke', colorRgb, opacity)
+      } else {
+        this.setActiveObjectPropertyColor(this.activeObjectColorProperty, colorRgb, opacity)
       }
 
       this.canvas.renderAll()
@@ -210,7 +198,23 @@ export default {
       this.onClickColor(undefined, this.activeObjectOpacity)
     },
 
-    setObjectColor(object, color, opacity) {},
+    setActiveObjectPropertyColor(property, colorRgb, opacity) {
+      if (colorRgb !== undefined && this.activeObjectOpacity === 0) {
+        this.activeObjectOpacity = 1
+      }
+
+      for (const object of this.getAsFlatActiveObjects()) {
+        const color = fabric.Color.fromRgba(
+          colorRgb === undefined ? object[property] || this.emptyColor : colorRgb
+        )
+
+        color.setAlpha(opacity === undefined ? this.activeObjectOpacity : opacity)
+
+        object.set({
+          [property]: color.toRgba(),
+        })
+      }
+    },
 
     onClickToogleDraw() {
       if (this.mode === 'draw') {
@@ -341,11 +345,7 @@ export default {
     },
 
     loadFromUrl(url) {
-      fabric.Image.fromURL(url, image => {
-        image.on('object:rotating', () => {
-
-        })
-
+      fabric.Image.fromURL(url, (image, isError) => {
         this.canvas.setHeight(image.height)
         this.canvas.setWidth(image.width)
 
@@ -407,12 +407,6 @@ export default {
           break
         }
       }
-    },
-  },
-
-  computed: {
-    ready() {
-      return this.image && (this.image.url || this.image.schema)
     },
   },
 
@@ -479,5 +473,8 @@ export default {
 <style lang="css" scoped>
 .btn-group .custom-select {
   width: auto;
+}
+.card-header {
+  border-bottom: none;
 }
 </style>
