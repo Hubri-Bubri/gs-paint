@@ -1,6 +1,5 @@
 const path = require('path')
 const { VueLoaderPlugin } = require('vue-loader')
-const WebpackShellPluginNext = require('webpack-shell-plugin-next')
 
 
 module.exports = {
@@ -19,13 +18,6 @@ module.exports = {
 
   plugins: [
     new VueLoaderPlugin(),
-    new WebpackShellPluginNext({
-      onBuildEnd: {
-        scripts: [
-          'tar -cvzf gs-paint.tar.gz --exclude="node_modules" --exclude=".git" --exclude="gs-paint.tar.gz" --exclude=".DS_Store" -C .. gs-paint',
-        ],
-      }
-    }),
   ],
 
   devServer: {
@@ -33,7 +25,7 @@ module.exports = {
       {directory: path.join(__dirname, 'sandbox')},
       {directory: path.join(__dirname, 'dist')},
     ],
-    port: 9000,
+    port: 8000,
   },
 
   devtool: 'inline-source-map',
