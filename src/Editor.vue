@@ -1,7 +1,7 @@
 <template>
   <div class="gs-paint-editor">
 
-    <b-card header-tag="header" no-body bg-variant="light">
+    <b-card header-tag="header" no-body bg-variant="light" ref="card">
       <template #header>
         <b-button-toolbar>
           <b-button-group size="sm" class="mr-1">
@@ -90,7 +90,7 @@
         </b-button-toolbar>
       </template>
 
-      <b-card-body class="overflow-auto d-flex justify-content-center p-0">
+      <b-card-body class="overflow-auto d-flex justify-content-center p-0" ref="body">
         <canvas id="canvas" ref="canvas"></canvas>
       </b-card-body>
     </b-card>
@@ -104,6 +104,10 @@ import { fabric } from 'fabric'
 export default {
   props: {
     image: {
+      type: Object,
+      default: null,
+    },
+    frame: {
       type: Object,
       default: null,
     },
@@ -123,17 +127,12 @@ export default {
     onClickRotate() {
       const angle = (this.canvas.backgroundImage.angle + 90) % 360
 
-      if (angle % 180 === 0) {
-        this.canvas.setHeight(this.canvas.backgroundImage.height)
-        this.canvas.setWidth(this.canvas.backgroundImage.width)
-      } else {
-        this.canvas.setHeight(this.canvas.backgroundImage.width)
-        this.canvas.setWidth(this.canvas.backgroundImage.height)
-      }
+      this.renderSizing({
+        angle,
+      })
 
-      this.canvas.backgroundImage.center()
+      this.canvas.viewportCenterObject(this.canvas.backgroundImage)
       this.canvas.backgroundImage.rotate(angle)
-
       this.canvas.renderAll()
     },
 
@@ -152,8 +151,6 @@ export default {
         url: this.image.url,
         dataUrl: this.canvas.toDataURL(),
         schema: {
-          height: this.canvas.getHeight(),
-          width: this.canvas.getWidth(),
           json: this.canvas.toJSON(),
         },
       })
@@ -318,13 +315,13 @@ export default {
       this.canvas.add(shape)
 
       if (position === 'center') {
-        shape.center()
+        this.canvas.viewportCenterObject(shape)
       }
     },
 
     getAsFlatActiveObjects() {
       return this.canvas.getActiveObjects().reduce((array, value) => {
-        return array.concat(value.type == 'group' ? value.getObjects() : [value])
+        return array.concat(value.type === 'group' ? value.getObjects() : [value])
       }, [])
     },
 
@@ -345,20 +342,22 @@ export default {
     },
 
     loadFromUrl(url) {
-      fabric.Image.fromURL(url, (image, isError) => {
-        this.canvas.setHeight(image.height)
-        this.canvas.setWidth(image.width)
-
+      fabric.Image.fromURL(url, image => {
         this.canvas.setBackgroundImage(image, () => {
-          this.canvas.renderAll()
+          this.renderSizing({
+            angle: image.angle,
+          })
+        }, {
+          centeredRotation: true,
+          centeredScaling: true,
         })
       })
     },
 
     loadFromSchema(schema) {
-      this.canvas.setHeight(schema.height)
-      this.canvas.setWidth(schema.width)
-      this.canvas.loadFromJSON(schema.json)
+      this.canvas.loadFromJSON(schema.json, () => {
+        this.renderSizing({angle: this.canvas.backgroundImage.angle})
+      })
     },
   
     oneOfModes(...modes) {
@@ -383,19 +382,37 @@ export default {
     },
 
     load() {
-      this.canvas.clear()
-
       if (this.image && this.image.schema) {
         this.loadFromSchema(this.image.schema)
       } else if (this.image && this.image.url) {
         this.loadFromUrl(this.image.url)
-      } else {
-        this.canvas.setHeight(0)
-        this.canvas.setWidth(0)
       }
     },
 
-    removeTabIndex(renameTo='data-tabindex') {
+    renderSizing({angle}) {
+      if (this.canvas.backgroundImage == null) {
+        return
+      }
+
+      const rotated = angle % 180 === 0
+
+      const bgHeight = rotated ? this.canvas.backgroundImage.height : this.canvas.backgroundImage.width
+      const bgWidth = rotated ? this.canvas.backgroundImage.width : this.canvas.backgroundImage.height
+
+      const frame = this.frame === null ? this.canvas.backgroundImage : this.frame
+
+      const zoom = Math.min(
+        frame.height / bgHeight,
+        frame.width / bgWidth)
+
+      this.canvas.setHeight(bgHeight * zoom)
+      this.canvas.setWidth(bgWidth * zoom)
+      this.canvas.setZoom(zoom)
+
+      this.canvas.renderAll()
+    },
+
+    removeTabIndexForModal(renameTo='data-tabindex') {
       var element = this.$el
 
       while (element = element.parentElement) {
@@ -408,19 +425,26 @@ export default {
         }
       }
     },
+
   },
 
   watch: {
-    image: {
-      handler() {
-        this.load()
-      },
+    image() {
+      this.load()
     },
-  
-    activeObjectColorProperty: {
-      handler(value) {
-        this.computeActiveObjectOpacity()
-      },
+
+    frame() {
+      if (this.canvas.backgroundImage === null) {
+        return
+      }
+
+      this.renderSizing({
+        angle: this.canvas.backgroundImage.angle
+      })
+    },
+
+    activeObjectColorProperty() {
+      this.computeActiveObjectOpacity()
     },
   },
 
@@ -437,6 +461,9 @@ export default {
 
     this.canvas = new fabric.Canvas('canvas', {
       uniformScaling: false,
+      centeredScaling: true,
+      centeredRotation: true,
+      backgroundVpt: true,
     })
 
     this.canvas.freeDrawingBrush = new fabric.PencilBrush(this.canvas);
@@ -459,7 +486,7 @@ export default {
       this.switchToMode('waiting')
     })
 
-    this.removeTabIndex()
+    this.removeTabIndexForModal()
     this.load()
   },
 
