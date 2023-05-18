@@ -1,6 +1,6 @@
 <template>
   <div class="demo-gs-paint-editor d-flex justify-content-center align-items-center h-100">
-    <b-modal id="exploler" ref="exploler" title="Expoler" centered>
+    <b-modal id="exploler" ref="exploler" title="Expoler">
       <b-list-group>
         <b-list-group-item href="#" v-for="image in images" :key="image.url" @click="onClickImage(image); $refs.exploler.hide()">
           {{image.url}} <b-icon icon="file-check" class="float-right" v-if="image.schema"></b-icon>
