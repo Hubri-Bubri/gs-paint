@@ -1,6 +1,6 @@
 <template>
   <b-modal ref="modal" :id="id" title="Popup" centered hide-header @shown="onShown" hide-footer>
-    <Editor ref="editor" :image="image" :frame="frame" @change="onChange">
+    <Editor ref="editor" :image="image" :frame="frame" @change="onChange" @click-close="onClickClose">
       <template #left-btn-group>
         <slot name="left-btn-group"></slot>
       </template>
@@ -37,12 +37,24 @@ export default {
       this.$emit('change', image)
     },
 
+    onClickClose() {
+      this.hide()
+    },
+
     onShown() {
       this.frame = this.frameSizing()
     },
 
-    plusSize() {
-      this.$refs.editor.plusSize()
+    onWindowResize() {
+      this.onShown()
+    },
+
+    show() {
+      this.$refs.modal.show()
+    },
+
+    hide() {
+      this.$refs.modal.hide()
     },
 
     frameSizing() {
@@ -54,14 +66,14 @@ export default {
         height: document.documentElement.scrollHeight - (modalEl.offsetHeight - cardEl.offsetHeight),
       }
     },
+  },
 
-    show() {
-      this.$refs.modal.show()
-    },
+  mounted() {
+    window.addEventListener('resize', this.onWindowResize)
+  },
 
-    hide() {
-      this.$refs.modal.hide()
-    },
+  destroyed() {
+    window.removeEventListener('resize', this.onWindowResize)
   },
 }
 </script>
