@@ -9,15 +9,27 @@
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
-            <b-button @click="onClickSave" variant="primary">
-              <b-icon icon="sd-card"></b-icon> Save
-            </b-button>
+            <b-dropdown variant="primary">
+              <template #button-content>
+                <b-icon icon="sd-card"></b-icon>
+              </template>
+
+              <b-dropdown-item href="#" @click="onClickSave">
+                <b-icon icon="sd-card"></b-icon> Save
+              </b-dropdown-item>
+              <b-dropdown-item href="#" @click="onClickSaveAndClose">
+                <b-icon icon="sd-card-fill"></b-icon> Save & Close
+              </b-dropdown-item>
+              <b-dropdown-item href="#" @click="onClickClose">
+                <b-icon icon="x-circle"></b-icon> Close
+              </b-dropdown-item>
+            </b-dropdown>
           </b-button-group>
 
           <b-button-group size="sm" class="mr-1">
             <b-dropdown variant="primary">
               <template #button-content>
-                <b-icon icon="plus-circle"></b-icon> Shape
+                <b-icon icon="plus-circle"></b-icon>
               </template>
 
               <b-dropdown-item href="#" @click="onClickAddCircle">
@@ -40,7 +52,7 @@
 
           <b-button-group size="sm" class="mr-1">
             <b-button @click="onClickToogleDraw" variant="primary">
-              <b-icon :icon="mode == 'draw' ? 'pencil-fill' : 'pencil'"></b-icon> Draw
+              <b-icon :icon="mode == 'draw' ? 'pencil-fill' : 'pencil'"></b-icon>
             </b-button>
           </b-button-group>
 
@@ -152,6 +164,15 @@ export default {
           json: this.canvas.toJSON(),
         },
       })
+    },
+
+    onClickSaveAndClose() {
+      this.onClickSave()
+      this.$emit('click-close')
+    },
+
+    onClickClose() {
+      this.$emit('click-close')
     },
 
     onClickStroke() {
@@ -396,7 +417,8 @@ export default {
 
       const zoom = Math.min(
         frame.height / bgHeight,
-        frame.width / bgWidth)
+        frame.width / bgWidth,
+        1)
 
       this.canvas.setHeight(bgHeight * zoom)
       this.canvas.setWidth(bgWidth * zoom)
