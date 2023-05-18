@@ -1,5 +1,5 @@
 <template>
-  <b-modal ref="modal" :id="id" title="Popup" centered hide-header @shown="onShown" hide-footer>
+  <b-modal ref="modal" :id="id" title="Popup" hide-header @shown="onShown" hide-footer>
     <Editor ref="editor" :image="image" :frame="frame" @change="onChange" @click-close="onClickClose">
       <template #left-btn-group>
         <slot name="left-btn-group"></slot>
@@ -58,6 +58,10 @@ export default {
     },
 
     frameSizing() {
+      if (this.$refs.editor === undefined || this.$refs.modal === undefined) {
+        return
+      }
+
       const cardEl = this.$refs.editor.$refs.body
       const modalEl = this.$refs.modal.$refs.content
 

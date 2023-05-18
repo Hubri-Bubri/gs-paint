@@ -99,6 +99,12 @@
             </b-button>
           </b-button-group>
 
+          <b-button-group size="sm" class="mr-1">
+            <b-button variant="light">
+              {{zoom.toFixed(2)}}
+            </b-button>
+          </b-button-group>
+
         </b-button-toolbar>
       </template>
 
@@ -131,7 +137,7 @@ export default {
       activeObjectColorProperty: 'full',
       activeObjectOpacity: 1,
       activeObjectStrokeWidth: 0,
-      ready: false,
+      zoom: 1,
     }
   },
 
@@ -422,14 +428,14 @@ export default {
 
       const frame = this.frame === null ? this.canvas.backgroundImage : this.frame
 
-      const zoom = Math.min(
+      this.zoom = Math.min(
         frame.height / bgHeight,
         frame.width / bgWidth,
         1)
 
-      this.canvas.setHeight(bgHeight * zoom)
-      this.canvas.setWidth(bgWidth * zoom)
-      this.canvas.setZoom(zoom)
+      this.canvas.setHeight(bgHeight * this.zoom)
+      this.canvas.setWidth(bgWidth * this.zoom)
+      this.canvas.setZoom(this.zoom)
 
       this.canvas.renderAll()
     },
