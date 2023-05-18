@@ -58,8 +58,3 @@ export default {
 }
 </script>
 
-<style lang="css">
-#popup .modal-dialog {
-  max-width: 1000px !important;
-}
-</style>
