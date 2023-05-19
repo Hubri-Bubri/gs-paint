@@ -1,5 +1,5 @@
 <template>
-  <b-modal ref="modal" :id="id" title="Popup" hide-header @shown="onShown" hide-footer>
+  <b-modal :id="id" :size="size" ref="modal" title="Popup" hide-header @shown="onShown" hide-footer dialog-class="gs-paint-modal-editor">
     <Editor ref="editor" :image="image" :frame="frame" @change="onChange" @click-close="onClickClose">
       <template #left-btn-group>
         <slot name="left-btn-group"></slot>
@@ -23,6 +23,9 @@ export default {
     image: {
       type: Object,
       default: null,
+    },
+    size: {
+      default: 'xl'
     },
   },
 
@@ -83,7 +86,11 @@ export default {
 </script>
 
 <style lang="css">
-#popup .modal-dialog {
-  max-width: 1000px !important;
-}
+  .gs-paint-modal-editor.modal-dialog {
+    margin: 0 auto;
+  }
+  .gs-paint-modal-editor .modal-content {
+    background: none;
+    border: none;
+  }
 </style>
