@@ -431,7 +431,7 @@ export default {
       this.zoom = Math.min(
         frame.height / bgHeight,
         frame.width / bgWidth,
-        1)
+        1.3)
 
       this.canvas.setHeight(bgHeight * this.zoom)
       this.canvas.setWidth(bgWidth * this.zoom)
